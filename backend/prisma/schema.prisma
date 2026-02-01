@@ -1,0 +1,193 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  USER
+  ADMIN
+  DOCTOR
+}
+
+enum AppointmentStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+enum AmbulanceStatus {
+  PENDING
+  DISPATCHED
+  COMPLETED
+  CANCELLED
+}
+
+model User {
+  id          Int       @id @default(autoincrement())
+  name        String
+  email       String    @unique
+  password    String
+  phone       String?
+  dateOfBirth DateTime?
+  bloodGroup  String?
+  role        Role      @default(USER)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  appointments      Appointment[]
+  orders            Order[]
+  ambulanceRequests AmbulanceRequest[]
+  doctorProfile     Doctor?
+}
+
+model Doctor {
+  id              Int      @id @default(autoincrement())
+  userId          Int      @unique
+  specialization  String   // Keep for backward compatibility (primary specialization)
+  specializations Json?    // Array of specializations e.g. ["Cardiology", "Internal Medicine"]
+  visitingHours   String   // e.g., "10:00 AM - 05:00 PM"
+  fees            Float
+  hospitalId      Int?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user                User                       @relation(fields: [userId], references: [id])
+  hospital            Hospital?                  @relation(fields: [hospitalId], references: [id])
+  appointments        Appointment[]
+  availability        DoctorAvailability[]
+  weeklyAvailability  DoctorWeeklyAvailability[]
+}
+
+model DoctorAvailability {
+  id        Int      @id @default(autoincrement())
+  doctorId  Int
+  date      DateTime @db.Date
+  startTime String   // e.g., "09:00"
+  endTime   String   // e.g., "09:30"
+  isBooked  Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  doctor Doctor @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+
+  @@unique([doctorId, date, startTime])
+}
+
+// Weekday-based availability (recurring weekly schedule)
+model DoctorWeeklyAvailability {
+  id        Int      @id @default(autoincrement())
+  doctorId  Int
+  dayOfWeek Int      // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+  startTime String   // e.g., "09:00"
+  endTime   String   // e.g., "09:30"
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  doctor Doctor @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+
+  @@unique([doctorId, dayOfWeek, startTime])
+}
+
+model Hospital {
+  id        Int      @id @default(autoincrement())
+  name      String
+  address   String
+  latitude  Float
+  longitude Float
+  phone     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  appointments Appointment[]
+  doctors      Doctor[]
+}
+
+model Appointment {
+  id         Int               @id @default(autoincrement())
+  patientId  Int
+  doctorId   Int
+  hospitalId Int?
+  date       DateTime
+  status     AppointmentStatus @default(PENDING)
+  reason     String?
+  createdAt  DateTime          @default(now())
+  updatedAt  DateTime          @updatedAt
+
+  patient  User     @relation(fields: [patientId], references: [id])
+  doctor   Doctor   @relation(fields: [doctorId], references: [id])
+  hospital Hospital? @relation(fields: [hospitalId], references: [id])
+
+  @@unique([doctorId, date]) // Prevent double booking for the same doctor at the same time
+}
+
+model Medicine {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String?
+  category    String?
+  price       Float
+  stock       Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  orderItems OrderItem[]
+}
+
+model Order {
+  id        Int         @id @default(autoincrement())
+  userId    Int
+  total     Float
+  status    OrderStatus @default(PENDING)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  user       User        @relation(fields: [userId], references: [id])
+  orderItems OrderItem[]
+}
+
+model OrderItem {
+  id         Int   @id @default(autoincrement())
+  orderId    Int
+  medicineId Int
+  quantity   Int
+  price      Float // Price at the time of order
+
+  order    Order    @relation(fields: [orderId], references: [id])
+  medicine Medicine @relation(fields: [medicineId], references: [id])
+}
+
+model AmbulanceRequest {
+  id        Int             @id @default(autoincrement())
+  userId    Int
+  latitude  Float
+  longitude Float
+  status    AmbulanceStatus @default(PENDING)
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model AmbulanceService {
+  id          Int      @id @default(autoincrement())
+  companyName String
+  phone       String
+  address     String?
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}

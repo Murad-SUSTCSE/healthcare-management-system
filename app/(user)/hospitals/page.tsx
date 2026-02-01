@@ -1,0 +1,299 @@
+'use client';
+
+import { useState } from 'react';
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import {
+  Search,
+  MapPin,
+  Building2,
+  Phone,
+  Clock,
+  Navigation,
+  AlertCircle,
+} from 'lucide-react';
+
+// Hardcoded hospitals in Sylhet
+const HOSPITALS = [
+  {
+    id: '1',
+    name: 'Sylhet MAG Osmani Medical College Hospital',
+    address: 'Medical College Road, Sylhet',
+    phone: '0821-716001',
+    emergencyService: true,
+    type: 'Government',
+    departments: ['Emergency', 'Surgery', 'Medicine', 'Pediatrics', 'Gynecology'],
+  },
+  {
+    id: '2',
+    name: 'Mount Adora Hospital',
+    address: 'Subhanighat, Sylhet',
+    phone: '0821-2830000',
+    emergencyService: true,
+    type: 'Private',
+    departments: ['Cardiology', 'Neurology', 'Orthopedics', 'ICU'],
+  },
+  {
+    id: '3',
+    name: 'Jalalabad Ragib Rabeya Medical College Hospital',
+    address: 'Pathantula, Sylhet',
+    phone: '0821-761001',
+    emergencyService: true,
+    type: 'Private',
+    departments: ['Surgery', 'Medicine', 'Cardiology', 'Nephrology'],
+  },
+  {
+    id: '4',
+    name: 'North East Medical College Hospital',
+    address: 'South Surma, Sylhet',
+    phone: '0821-2890001',
+    emergencyService: true,
+    type: 'Private',
+    departments: ['Emergency', 'Surgery', 'Pediatrics', 'Gynecology'],
+  },
+  {
+    id: '5',
+    name: 'Sylhet Women\'s Medical College Hospital',
+    address: 'Mirboxtola, Sylhet',
+    phone: '0821-717901',
+    emergencyService: true,
+    type: 'Private',
+    departments: ['Gynecology', 'Obstetrics', 'Pediatrics', 'Neonatology'],
+  },
+  {
+    id: '6',
+    name: 'Ibn Sina Hospital Sylhet',
+    address: 'Zindabazar, Sylhet',
+    phone: '0821-725678',
+    emergencyService: true,
+    type: 'Private',
+    departments: ['Cardiology', 'Gastroenterology', 'Orthopedics', 'ENT'],
+  },
+  {
+    id: '7',
+    name: 'Oasis Hospital',
+    address: 'Amberkhana, Sylhet',
+    phone: '0821-2831234',
+    emergencyService: true,
+    type: 'Private',
+    departments: ['General Medicine', 'Surgery', 'Diagnostics'],
+  },
+  {
+    id: '8',
+    name: 'Popular Diagnostic Centre Sylhet',
+    address: 'Bondor, Sylhet',
+    phone: '0821-720123',
+    emergencyService: false,
+    type: 'Diagnostic',
+    departments: ['Pathology', 'Radiology', 'Cardiology', 'Health Checkup'],
+  },
+  {
+    id: '9',
+    name: 'Medinova Medical Services',
+    address: 'Zindabazar, Sylhet',
+    phone: '0821-718500',
+    emergencyService: false,
+    type: 'Diagnostic',
+    departments: ['Diagnostics', 'Consultation', 'Lab Services'],
+  },
+  {
+    id: '10',
+    name: 'Shahjalal Upazila Health Complex',
+    address: 'Airport Road, Sylhet',
+    phone: '0821-723456',
+    emergencyService: true,
+    type: 'Government',
+    departments: ['General Medicine', 'Emergency', 'Vaccination'],
+  },
+];
+
+export default function HospitalsPage() {
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const filteredHospitals = HOSPITALS.filter(
+    (h) =>
+      h.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      h.address.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      h.type.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const openGoogleMapsDirections = (hospitalName: string, address: string) => {
+    const destination = encodeURIComponent(`${hospitalName}, ${address}`);
+    const url = `https://www.google.com/maps/dir/?api=1&destination=${destination}`;
+    window.open(url, '_blank');
+  };
+
+  const emergencyCount = filteredHospitals.filter((h) => h.emergencyService).length;
+
+  return (
+    <div className="space-y-6 p-4 sm:p-6 lg:p-8">
+      {/* Header */}
+      <div>
+        <h1 className="text-3xl font-bold text-foreground">Find Hospitals</h1>
+        <p className="mt-2 text-muted-foreground">
+          Discover healthcare facilities in Sylhet
+        </p>
+      </div>
+
+      {/* Search Bar */}
+      <div className="relative">
+        <Search className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
+        <Input
+          placeholder="Search by hospital name, location, or type..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="pl-10 rounded-lg"
+        />
+      </div>
+
+      {/* Stats */}
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Card className="p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-muted-foreground">Total Hospitals</p>
+              <p className="mt-1 text-2xl font-bold text-foreground">
+                {filteredHospitals.length}
+              </p>
+            </div>
+            <div className="rounded-lg bg-blue-100 p-3">
+              <Building2 className="h-6 w-6 text-blue-600" />
+            </div>
+          </div>
+        </Card>
+
+        <Card className="p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-muted-foreground">Emergency Services</p>
+              <p className="mt-1 text-2xl font-bold text-foreground">{emergencyCount}</p>
+            </div>
+            <div className="rounded-lg bg-red-100 p-3">
+              <AlertCircle className="h-6 w-6 text-red-600" />
+            </div>
+          </div>
+        </Card>
+      </div>
+
+      {/* Hospitals List */}
+      <div>
+        <h2 className="mb-4 text-xl font-semibold text-foreground">
+          Hospitals in Sylhet ({filteredHospitals.length})
+        </h2>
+
+        {filteredHospitals.length === 0 ? (
+          <Card className="p-12 text-center">
+            <MapPin className="mx-auto h-12 w-12 text-muted-foreground opacity-50" />
+            <p className="mt-4 text-lg text-muted-foreground">
+              No hospitals found matching your search
+            </p>
+          </Card>
+        ) : (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {filteredHospitals.map((hospital) => (
+              <Card key={hospital.id} className="p-6 hover:shadow-lg transition-shadow">
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex items-center gap-3">
+                    <div className={`p-3 rounded-xl ${
+                      hospital.type === 'Government' 
+                        ? 'bg-green-100 text-green-600' 
+                        : hospital.type === 'Diagnostic'
+                        ? 'bg-purple-100 text-purple-600'
+                        : 'bg-blue-100 text-blue-600'
+                    }`}>
+                      <Building2 className="h-6 w-6" />
+                    </div>
+                    <div>
+                      <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${
+                        hospital.type === 'Government'
+                          ? 'bg-green-100 text-green-700'
+                          : hospital.type === 'Diagnostic'
+                          ? 'bg-purple-100 text-purple-700'
+                          : 'bg-blue-100 text-blue-700'
+                      }`}>
+                        {hospital.type}
+                      </span>
+                      {hospital.emergencyService && (
+                        <span className="ml-2 text-xs font-medium px-2 py-0.5 rounded-full bg-red-100 text-red-700">
+                          24/7 Emergency
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <h3 className="text-lg font-bold text-foreground mb-2">
+                  {hospital.name}
+                </h3>
+
+                <div className="flex items-start gap-2 mb-2 text-sm text-muted-foreground">
+                  <MapPin className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                  <span>{hospital.address}</span>
+                </div>
+
+                <div className="flex items-center gap-2 mb-4 text-sm">
+                  <Phone className="h-4 w-4 text-muted-foreground" />
+                  <a href={`tel:${hospital.phone}`} className="text-primary hover:underline">
+                    {hospital.phone}
+                  </a>
+                </div>
+
+                {/* Departments */}
+                <div className="mb-4">
+                  <div className="flex flex-wrap gap-1">
+                    {hospital.departments.slice(0, 3).map((dept) => (
+                      <span
+                        key={dept}
+                        className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600"
+                      >
+                        {dept}
+                      </span>
+                    ))}
+                    {hospital.departments.length > 3 && (
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">
+                        +{hospital.departments.length - 3}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex gap-2 pt-4 border-t">
+                  <Button
+                    onClick={() => openGoogleMapsDirections(hospital.name, hospital.address)}
+                    className="flex-1 bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700"
+                  >
+                    <Navigation className="h-4 w-4 mr-2" />
+                    Directions
+                  </Button>
+                  <a href={`tel:${hospital.phone}`} className="flex-1">
+                    <Button variant="outline" className="w-full">
+                      <Phone className="h-4 w-4 mr-2" />
+                      Call
+                    </Button>
+                  </a>
+                </div>
+              </Card>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Info Card */}
+      <Card className="p-6 bg-gradient-to-r from-blue-50 to-green-50 border-blue-200">
+        <div className="flex items-center gap-4">
+          <div className="p-3 rounded-full bg-white">
+            <Clock className="h-6 w-6 text-blue-600" />
+          </div>
+          <div>
+            <h3 className="font-bold text-foreground">Emergency Services</h3>
+            <p className="text-sm text-muted-foreground">
+              Most hospitals offer 24/7 emergency services. Call ahead or dial 999 for emergencies.
+            </p>
+          </div>
+        </div>
+      </Card>
+    </div>
+  );
+}
