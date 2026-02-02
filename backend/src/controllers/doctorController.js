@@ -641,18 +641,11 @@ const getPublicDoctorWeeklyAvailability = async (req, res) => {
 };
 
 // Get all doctors (public endpoint for patients)
-// Only shows doctors who have set their visiting hours
 const getAllDoctors = async (req, res) => {
   try {
     const { specialization } = req.query;
     
     const doctors = await prisma.doctor.findMany({
-      where: {
-        // Only show doctors who have set their visiting hours
-        visitingHours: {
-          not: '',
-        },
-      },
       include: {
         user: {
           select: { id: true, name: true, email: true },
@@ -660,6 +653,7 @@ const getAllDoctors = async (req, res) => {
         hospital: {
           select: { id: true, name: true, address: true },
         },
+        weeklyAvailability: true,
       },
     });
 
@@ -673,7 +667,7 @@ const getAllDoctors = async (req, res) => {
       hospital: doctor.hospital?.name || 'Independent Practice',
       hospitalAddress: doctor.hospital?.address || '',
       fees: doctor.fees,
-      visitingHours: doctor.visitingHours,
+      availableSlots: doctor.weeklyAvailability || [],
       rating: 4.5, // Placeholder - could be calculated from reviews
     }));
 
@@ -706,6 +700,7 @@ const getDoctorById = async (req, res) => {
         hospital: {
           select: { id: true, name: true, address: true },
         },
+        weeklyAvailability: true,
       },
     });
 
@@ -722,7 +717,7 @@ const getDoctorById = async (req, res) => {
       hospital: doctor.hospital?.name || 'Independent Practice',
       hospitalAddress: doctor.hospital?.address || '',
       fees: doctor.fees,
-      visitingHours: doctor.visitingHours,
+      availableSlots: doctor.weeklyAvailability || [],
       rating: 4.5,
     });
   } catch (error) {

@@ -12,10 +12,8 @@ import {
   Mail,
   Phone,
   Calendar,
-  MapPin,
   Edit2,
   Save,
-  CheckCircle,
   Stethoscope,
   Loader2,
   Building,
@@ -25,7 +23,6 @@ import {
   Key,
   Smartphone,
   X,
-  Clock,
 } from 'lucide-react';
 import { apiService } from '@/services/api';
 
@@ -62,7 +59,6 @@ interface DoctorProfile {
   userId: number;
   specialization: string;
   specializations?: string[];
-  visitingHours: string;
   fees: number;
   hospitalId: number | null;
   user: { id: number; name: string; email: string };
@@ -95,9 +91,19 @@ export default function ProfilePage() {
   const [doctorForm, setDoctorForm] = useState({
     specializations: [] as string[],
     fees: '',
-    visitingHours: '',
     hospitalId: '',
   });
+
+  // Password change state
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  });
+  const [passwordError, setPasswordError] = useState('');
+  const [passwordSuccess, setPasswordSuccess] = useState('');
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
 
   const isDoctor = user?.role === 'DOCTOR';
 
@@ -127,7 +133,6 @@ export default function ProfilePage() {
         setDoctorForm({
           specializations: profileData.specializations || (profileData.specialization ? [profileData.specialization] : []),
           fees: profileData.fees?.toString() || '',
-          visitingHours: profileData.visitingHours || '',
           hospitalId: profileData.hospitalId?.toString() || '',
         });
       } catch {
@@ -149,6 +154,39 @@ export default function ProfilePage() {
     });
   };
 
+  const handleChangePassword = async () => {
+    setPasswordError('');
+    setPasswordSuccess('');
+
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      setPasswordError('New passwords do not match');
+      return;
+    }
+
+    if (passwordForm.newPassword.length < 6) {
+      setPasswordError('New password must be at least 6 characters');
+      return;
+    }
+
+    try {
+      setIsChangingPassword(true);
+      await apiService.changePassword({
+        currentPassword: passwordForm.currentPassword,
+        newPassword: passwordForm.newPassword,
+      });
+      setPasswordSuccess('Password changed successfully!');
+      setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
+      setTimeout(() => {
+        setShowPasswordModal(false);
+        setPasswordSuccess('');
+      }, 2000);
+    } catch (error: any) {
+      setPasswordError(error?.message || 'Failed to change password');
+    } finally {
+      setIsChangingPassword(false);
+    }
+  };
+
   const saveDoctorProfile = async () => {
     if (doctorForm.specializations.length === 0) {
       alert('Please select at least one specialization');
@@ -159,7 +197,6 @@ export default function ProfilePage() {
         specializations: doctorForm.specializations,
         fees: parseFloat(doctorForm.fees),
         hospitalId: doctorForm.hospitalId ? parseInt(doctorForm.hospitalId) : undefined,
-        visitingHours: doctorForm.visitingHours,
       });
       setDoctorProfile(updatedProfile);
       setIsEditingDoctor(false);
@@ -359,14 +396,10 @@ export default function ProfilePage() {
                     )}
                   </div>
                   
-                  <div className="grid sm:grid-cols-3 gap-4">
+                  <div className="grid sm:grid-cols-2 gap-4">
                     <div>
                       <label className="text-xs font-medium text-muted-foreground">Fees (BDT)</label>
                       <Input type="number" value={doctorForm.fees} onChange={(e) => setDoctorForm({ ...doctorForm, fees: e.target.value })} className="mt-1" />
-                    </div>
-                    <div>
-                      <label className="text-xs font-medium text-muted-foreground">Visiting Hours</label>
-                      <Input value={doctorForm.visitingHours} onChange={(e) => setDoctorForm({ ...doctorForm, visitingHours: e.target.value })} className="mt-1" />
                     </div>
                     <div>
                       <label className="text-xs font-medium text-muted-foreground">Hospital</label>
@@ -397,10 +430,9 @@ export default function ProfilePage() {
                     </div>
                   </div>
                   
-                  <div className="grid sm:grid-cols-3 gap-4">
+                  <div className="grid sm:grid-cols-2 gap-4">
                     {[
                       { icon: DollarSign, label: 'Consultation Fee', value: doctorProfile.fees ? `৳${doctorProfile.fees}` : null },
-                      { icon: Clock, label: 'Visiting Hours', value: doctorProfile.visitingHours },
                       { icon: Building, label: 'Hospital', value: doctorProfile.hospital?.name },
                     ].map(({ icon: Icon, label, value }) => (
                       <div key={label} className="flex items-center gap-3 p-3 rounded-lg bg-white/50">
@@ -422,21 +454,6 @@ export default function ProfilePage() {
 
         {/* Sidebar */}
         <div className="lg:col-span-2 space-y-4">
-          {/* Account Status */}
-          <Card className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-green-100">
-                <CheckCircle className="h-5 w-5 text-green-600" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-foreground">Account Active</p>
-                <p className="text-xs text-muted-foreground">
-                  Member since {user?.createdAt ? new Date(user.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : 'Recently'}
-                </p>
-              </div>
-            </div>
-          </Card>
-
           {/* Doctor Portal - Only show for doctors */}
           {isDoctor && (
             <Card className="p-4">
@@ -459,16 +476,110 @@ export default function ProfilePage() {
               <p className="text-sm font-medium text-foreground">Security</p>
             </div>
             <div className="space-y-2">
-              <Button size="sm" variant="ghost" className="w-full justify-start h-9">
+              <Button size="sm" variant="ghost" className="w-full justify-start h-9" onClick={() => setShowPasswordModal(true)}>
                 <Key className="h-4 w-4 mr-2" /> Change Password
               </Button>
-              <Button size="sm" variant="ghost" className="w-full justify-start h-9">
+              <Button size="sm" variant="ghost" className="w-full justify-start h-9" disabled>
                 <Smartphone className="h-4 w-4 mr-2" /> Two-Factor Auth
               </Button>
             </div>
           </Card>
         </div>
       </div>
+
+      {/* Password Change Modal */}
+      {showPasswordModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <Card className="w-full max-w-md p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold">Change Password</h3>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => {
+                  setShowPasswordModal(false);
+                  setPasswordError('');
+                  setPasswordSuccess('');
+                  setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
+                }}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+
+            {passwordError && (
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+                {passwordError}
+              </div>
+            )}
+
+            {passwordSuccess && (
+              <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm">
+                {passwordSuccess}
+              </div>
+            )}
+
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-medium text-muted-foreground">Current Password</label>
+                <Input
+                  type="password"
+                  value={passwordForm.currentPassword}
+                  onChange={(e) => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })}
+                  placeholder="Enter current password"
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium text-muted-foreground">New Password</label>
+                <Input
+                  type="password"
+                  value={passwordForm.newPassword}
+                  onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
+                  placeholder="Enter new password (min 6 characters)"
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium text-muted-foreground">Confirm New Password</label>
+                <Input
+                  type="password"
+                  value={passwordForm.confirmPassword}
+                  onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
+                  placeholder="Confirm new password"
+                  className="mt-1"
+                />
+              </div>
+              <div className="flex gap-2 pt-2">
+                <Button
+                  className="flex-1"
+                  onClick={handleChangePassword}
+                  disabled={isChangingPassword || !passwordForm.currentPassword || !passwordForm.newPassword || !passwordForm.confirmPassword}
+                >
+                  {isChangingPassword ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" /> Changing...
+                    </>
+                  ) : (
+                    'Change Password'
+                  )}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setShowPasswordModal(false);
+                    setPasswordError('');
+                    setPasswordSuccess('');
+                    setPasswordForm({ currentPassword: '', newPassword: '', confirmPassword: '' });
+                  }}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }

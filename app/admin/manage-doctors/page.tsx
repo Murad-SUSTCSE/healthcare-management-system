@@ -56,7 +56,6 @@ interface Doctor {
   specialization: string;
   specializations?: string[];
   fees: number;
-  visitingHours: string;
   user: {
     id: number;
     name: string;
@@ -386,9 +385,9 @@ export default function ManageDoctorsPage() {
                 </div>
               </div>
 
-              <div className="p-3 bg-amber-50 rounded-lg text-xs text-amber-700">
+              <div className="p-3 bg-blue-50 rounded-lg text-xs text-blue-700">
                 <Clock className="h-4 w-4 inline mr-1" />
-                <strong>Note:</strong> Doctor must set their visiting hours from their profile to appear in patient listings.
+                <strong>Note:</strong> Doctor must set their weekly availability slots from their dashboard to enable appointment booking.
               </div>
 
               <div className="flex gap-2 pt-2">
@@ -499,19 +498,6 @@ export default function ManageDoctorsPage() {
                         {doctor.hospital && (
                           <span className="px-2 py-1 text-xs font-medium bg-purple-100 text-purple-700 rounded-full">
                             {doctor.hospital.name}
-                          </span>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-2 mt-2">
-                        {doctor.visitingHours ? (
-                          <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium bg-emerald-100 text-emerald-700 rounded-full">
-                            <Clock className="h-3 w-3" />
-                            {doctor.visitingHours}
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium bg-amber-100 text-amber-700 rounded-full">
-                            <Clock className="h-3 w-3" />
-                            Not visible to patients (no visiting hours)
                           </span>
                         )}
                       </div>

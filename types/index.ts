@@ -34,10 +34,14 @@ export interface Doctor {
   hospital: string;
   hospitalAddress?: string;
   fees?: number;
-  visitingHours?: string;
   avatar?: string;
   rating: number;
-  availableSlots?: string[];
+  availableSlots?: Array<{
+    id: number;
+    dayOfWeek: number;
+    startTime: string;
+    endTime: string;
+  }>;
 }
 
 export interface Appointment {

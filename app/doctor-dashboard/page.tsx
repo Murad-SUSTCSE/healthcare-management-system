@@ -26,7 +26,6 @@ interface DoctorProfile {
   id: number;
   userId: number;
   specialization: string;
-  visitingHours: string;
   fees: number;
   hospitalId: number | null;
   user: { id: number; name: string; email: string };
@@ -111,7 +110,6 @@ export default function DoctorDashboardPage() {
     specialization: '',
     fees: '',
     hospitalId: '',
-    visitingHours: '',
   });
 
   // Fetch doctor data
@@ -129,7 +127,6 @@ export default function DoctorDashboardPage() {
             specialization: profileData.specialization || '',
             fees: profileData.fees?.toString() || '',
             hospitalId: profileData.hospitalId?.toString() || '',
-            visitingHours: profileData.visitingHours || '',
           });
         } catch (err) {
           console.error('Doctor profile not found - may need to be created');
@@ -251,7 +248,6 @@ export default function DoctorDashboardPage() {
         specialization: editForm.specialization,
         fees: parseFloat(editForm.fees),
         hospitalId: editForm.hospitalId ? parseInt(editForm.hospitalId) : undefined,
-        visitingHours: editForm.visitingHours,
       });
       setProfile(updatedProfile);
       setIsEditingProfile(false);
@@ -304,57 +300,63 @@ export default function DoctorDashboardPage() {
 
   return (
     <ProtectedRoute>
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-pattern-doctor bg-background">
         <Header />
         <main className="container mx-auto px-4 py-6">
           <div className="space-y-6">
             {/* Header */}
-            <div className="flex items-center gap-4">
-              <div className="rounded-2xl bg-gradient-to-br from-blue-500 to-green-500 p-4">
-                <Stethoscope className="h-10 w-10 text-white" />
+            <Card className="relative overflow-hidden border-0 bg-gradient-to-r from-teal-600 via-cyan-500 to-blue-500 shadow-xl shadow-teal-500/20">
+              <div className="absolute inset-0 overflow-hidden">
+                <div className="absolute -top-4 -right-4 w-32 h-32 bg-white/10 rounded-full blur-2xl"></div>
+                <div className="absolute top-1/2 left-1/4 w-48 h-48 bg-blue-400/20 rounded-full blur-3xl"></div>
               </div>
-              <div>
-                <h1 className="text-3xl font-bold text-foreground">Doctor Dashboard</h1>
-              <p className="mt-1 text-muted-foreground">Welcome, Dr. {user?.name}</p>
-            </div>
-          </div>
+              <div className="relative flex items-center gap-4 p-6">
+                <div className="rounded-2xl bg-white/20 backdrop-blur-sm p-4 shadow-lg">
+                  <Stethoscope className="h-10 w-10 text-white" />
+                </div>
+                <div>
+                  <h1 className="text-3xl font-bold text-white">Doctor Dashboard</h1>
+                  <p className="mt-1 text-white/80">Welcome, Dr. {user?.name}</p>
+                </div>
+              </div>
+            </Card>
 
           {/* Quick Stats */}
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <Card className="p-6 border-l-4 border-l-blue-500">
+            <Card className="p-6 bg-card/80 backdrop-blur-sm border-border/50 border-l-4 border-l-blue-500 shadow-lg hover:shadow-xl transition-all">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Today's Appointments</p>
                   <p className="mt-1 text-3xl font-bold text-foreground">{todayAppointments.length}</p>
                 </div>
-                <div className="rounded-lg p-3 bg-blue-100 text-blue-600">
-                  <Calendar className="h-6 w-6" />
+                <div className="rounded-xl p-3 bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg shadow-blue-500/25">
+                  <Calendar className="h-6 w-6 text-white" />
                 </div>
               </div>
             </Card>
-            <Card className="p-6 border-l-4 border-l-green-500">
+            <Card className="p-6 bg-card/80 backdrop-blur-sm border-border/50 border-l-4 border-l-emerald-500 shadow-lg hover:shadow-xl transition-all">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Active Appointments</p>
                   <p className="mt-1 text-3xl font-bold text-foreground">{activeAppointments.length}</p>
                 </div>
-                <div className="rounded-lg p-3 bg-green-100 text-green-600">
-                  <Users className="h-6 w-6" />
+                <div className="rounded-xl p-3 bg-gradient-to-br from-emerald-500 to-teal-600 shadow-lg shadow-emerald-500/25">
+                  <Users className="h-6 w-6 text-white" />
                 </div>
               </div>
             </Card>
-            <Card className="p-6 border-l-4 border-l-amber-500">
+            <Card className="p-6 bg-card/80 backdrop-blur-sm border-border/50 border-l-4 border-l-amber-500 shadow-lg hover:shadow-xl transition-all">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Completed</p>
                   <p className="mt-1 text-3xl font-bold text-foreground">{appointments.filter(a => a.status === 'COMPLETED').length}</p>
                 </div>
-                <div className="rounded-lg p-3 bg-amber-100 text-amber-600">
-                  <Check className="h-6 w-6" />
+                <div className="rounded-xl p-3 bg-gradient-to-br from-amber-500 to-orange-600 shadow-lg shadow-amber-500/25">
+                  <Check className="h-6 w-6 text-white" />
                 </div>
               </div>
             </Card>
-            <Card className="p-6 border-l-4 border-l-purple-500">
+            <Card className="p-6 bg-card/80 backdrop-blur-sm border-border/50 border-l-4 border-l-purple-500 shadow-lg hover:shadow-xl transition-all">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Weekly Time Slots</p>
@@ -362,23 +364,23 @@ export default function DoctorDashboardPage() {
                     {weeklyAvailability.length}
                   </p>
                 </div>
-                <div className="rounded-lg p-3 bg-purple-100 text-purple-600">
-                  <Clock className="h-6 w-6" />
+                <div className="rounded-xl p-3 bg-gradient-to-br from-purple-500 to-pink-600 shadow-lg shadow-purple-500/25">
+                  <Clock className="h-6 w-6 text-white" />
                 </div>
               </div>
             </Card>
           </div>
 
           {/* Tab Navigation */}
-          <div className="flex gap-2 border-b border-border">
+          <div className="flex gap-1 p-1 bg-muted/50 rounded-xl border border-border/50">
             {['overview', 'availability', 'appointments'].map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab as typeof activeTab)}
-                className={`px-4 py-2 font-medium capitalize transition-colors ${
+                className={`flex-1 px-4 py-2.5 font-medium capitalize rounded-lg transition-all ${
                   activeTab === tab
-                    ? 'border-b-2 border-primary text-primary'
-                    : 'text-muted-foreground hover:text-foreground'
+                    ? 'bg-gradient-to-r from-teal-500 to-cyan-500 text-white shadow-lg'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-background'
                 }`}
               >
                 {tab}
@@ -390,7 +392,7 @@ export default function DoctorDashboardPage() {
           {activeTab === 'overview' && (
             <div className="grid gap-6 lg:grid-cols-2">
               {/* Upcoming Appointments */}
-              <Card className="p-6">
+              <Card className="p-6 bg-card/80 backdrop-blur-sm border-border/50 shadow-lg">
                 <h2 className="text-xl font-bold text-foreground mb-4">Upcoming Appointments</h2>
                 {appointments.filter(apt => new Date(apt.date) >= new Date() && apt.status !== 'CANCELLED' && apt.status !== 'COMPLETED').length === 0 ? (
                   <p className="text-muted-foreground text-center py-8">No upcoming appointments</p>

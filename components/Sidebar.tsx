@@ -62,16 +62,16 @@ export function Sidebar() {
   return (
     <>
       {/* Mobile Menu Button */}
-      <div className="sticky top-0 z-20 flex items-center justify-between border-b border-border bg-card p-4 lg:hidden">
+      <div className="sticky top-0 z-20 flex items-center justify-between border-b border-border/50 bg-card/95 backdrop-blur-xl p-4 lg:hidden">
         <div className="flex items-center gap-2">
-          <div className={`rounded-lg p-1.5 ${isAdmin ? 'bg-gradient-to-br from-red-500 to-orange-500' : isDoctor ? 'bg-gradient-to-br from-teal-500 to-blue-500' : 'bg-gradient-to-br from-blue-500 to-green-500'}`}>
+          <div className={`rounded-xl p-1.5 shadow-md ${isAdmin ? 'bg-gradient-to-br from-rose-500 to-orange-500 shadow-rose-500/25' : isDoctor ? 'bg-gradient-to-br from-teal-500 to-cyan-500 shadow-teal-500/25' : 'bg-gradient-to-br from-indigo-500 to-purple-600 shadow-indigo-500/25'}`}>
             {isAdmin ? <Shield className="h-5 w-5 text-white" /> : isDoctor ? <Stethoscope className="h-5 w-5 text-white" /> : <Heart className="h-5 w-5 text-white" />}
           </div>
           <span className="font-semibold text-foreground">{isAdmin ? 'Admin Panel' : isDoctor ? 'Doctor Portal' : 'Health Hub'}</span>
         </div>
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="rounded-lg p-2 hover:bg-muted"
+          className="rounded-xl p-2 hover:bg-muted transition-colors"
         >
           {isOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </button>
@@ -79,13 +79,13 @@ export function Sidebar() {
 
       {/* Sidebar */}
       <aside
-        className={`fixed inset-y-0 left-0 z-10 w-64 border-r border-border bg-card transition-transform duration-300 lg:static lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-10 w-64 border-r border-border/50 bg-card/95 backdrop-blur-xl transition-transform duration-300 lg:static lg:translate-x-0 ${
           isOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
         {/* Logo */}
-        <div className="hidden border-b border-border p-6 lg:flex lg:items-center lg:gap-3">
-          <div className={`rounded-lg p-2 ${isAdmin ? 'bg-gradient-to-br from-red-500 to-orange-500' : isDoctor ? 'bg-gradient-to-br from-teal-500 to-blue-500' : 'bg-gradient-to-br from-blue-500 to-green-500'}`}>
+        <div className="hidden border-b border-border/50 p-6 lg:flex lg:items-center lg:gap-3">
+          <div className={`rounded-xl p-2.5 shadow-lg ${isAdmin ? 'bg-gradient-to-br from-rose-500 to-orange-500 shadow-rose-500/25' : isDoctor ? 'bg-gradient-to-br from-teal-500 to-cyan-500 shadow-teal-500/25' : 'bg-gradient-to-br from-indigo-500 to-purple-600 shadow-indigo-500/25'}`}>
             {isAdmin ? <Shield className="h-6 w-6 text-white" /> : isDoctor ? <Stethoscope className="h-6 w-6 text-white" /> : <Heart className="h-6 w-6 text-white" />}
           </div>
           <div>
@@ -95,7 +95,7 @@ export function Sidebar() {
         </div>
 
         {/* Navigation Items */}
-        <nav className="flex-1 space-y-2 p-4">
+        <nav className="flex-1 space-y-1.5 p-4">
           {/* Show appropriate nav items based on role */}
           {(isAdmin ? adminNavItems : isDoctor ? doctorNavItems : userNavItems).map((item) => {
             const Icon = item.icon;
@@ -108,14 +108,14 @@ export function Sidebar() {
               <Link key={item.href} href={item.href}>
                 <button
                   onClick={() => setIsOpen(false)}
-                  className={`w-full flex items-center gap-3 rounded-lg px-4 py-3 text-left font-medium transition-all ${
+                  className={`w-full flex items-center gap-3 rounded-xl px-4 py-3 text-left font-medium transition-all duration-200 ${
                     isActive
                       ? isAdmin 
-                        ? 'bg-gradient-to-r from-red-100 to-orange-100 text-red-600'
+                        ? 'bg-gradient-to-r from-rose-500 to-orange-500 text-white shadow-lg shadow-rose-500/25'
                         : isDoctor
-                        ? 'bg-gradient-to-r from-teal-100 to-blue-100 text-teal-600'
-                        : 'bg-gradient-to-r from-blue-100 to-green-100 text-primary'
-                      : 'text-foreground hover:bg-muted'
+                        ? 'bg-gradient-to-r from-teal-500 to-cyan-500 text-white shadow-lg shadow-teal-500/25'
+                        : 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg shadow-indigo-500/25'
+                      : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                   }`}
                 >
                   <Icon className="h-5 w-5" />
@@ -127,14 +127,14 @@ export function Sidebar() {
         </nav>
 
         {/* Logout Button */}
-        <div className="border-t border-border p-4">
+        <div className="border-t border-border/50 p-4">
           <Button
             onClick={() => {
               logout();
               setIsOpen(false);
             }}
             variant="outline"
-            className="w-full justify-start rounded-lg gap-3 border-destructive/50 text-destructive hover:bg-destructive/10"
+            className="w-full justify-start rounded-xl gap-3 border-destructive/30 text-destructive hover:bg-destructive/10 hover:border-destructive/50"
           >
             <LogOut className="h-5 w-5" />
             Logout

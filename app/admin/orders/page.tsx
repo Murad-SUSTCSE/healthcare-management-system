@@ -26,6 +26,8 @@ interface Order {
   total: number;
   status: string;
   createdAt: string;
+  deliveryAddress?: string;
+  deliveryPhone?: string;
   user: {
     id: number;
     name: string;
@@ -154,6 +156,20 @@ export default function AdminOrdersPage() {
             {order.user.phone && <p><strong>Phone:</strong> {order.user.phone}</p>}
           </div>
         </div>
+
+        {/* Delivery Info */}
+        {(order.deliveryAddress || order.deliveryPhone) && (
+          <div className="bg-blue-50 p-3 rounded-lg mb-4 border border-blue-200">
+            <div className="flex items-center gap-2 mb-2">
+              <Truck className="w-4 h-4 text-blue-600" />
+              <span className="font-medium text-blue-800">Delivery Information</span>
+            </div>
+            <div className="text-sm space-y-1 ml-6">
+              {order.deliveryAddress && <p><strong>Address:</strong> {order.deliveryAddress}</p>}
+              {order.deliveryPhone && <p><strong>Phone:</strong> {order.deliveryPhone}</p>}
+            </div>
+          </div>
+        )}
 
         {/* Order Items */}
         <div className="space-y-2 mb-4">

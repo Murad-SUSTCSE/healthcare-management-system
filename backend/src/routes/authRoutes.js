@@ -7,6 +7,7 @@ router.post('/register', authController.register);
 router.post('/login', authController.login);
 router.get('/profile', authenticateToken, authController.getProfile);
 router.put('/profile', authenticateToken, authController.updateProfile);
+router.put('/change-password', authenticateToken, authController.changePassword);
 
 // Admin routes
 router.get('/admin/users', authenticateToken, requireAdmin, authController.getAllUsers);

@@ -98,7 +98,7 @@ export default function DashboardPage() {
       {/* Recent Appointments & Stats */}
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Recent Appointments */}
-        <Card className="lg:col-span-2 p-6">
+        <Card className="lg:col-span-2 p-6 bg-card/80 backdrop-blur-sm border-border/50 shadow-lg">
           <h3 className="text-lg font-semibold text-foreground">Upcoming Appointments</h3>
           <div className="mt-6 space-y-4">
             {isLoading ? (
@@ -109,13 +109,13 @@ export default function DashboardPage() {
               appointments.map((appointment) => (
                 <div
                   key={appointment.id}
-                  className="flex items-start gap-4 rounded-lg border border-border p-4 hover:bg-muted transition-colors"
+                  className="flex items-start gap-4 rounded-xl border border-border/50 p-4 hover:bg-muted/50 transition-all hover:shadow-md group"
                 >
-                  <div className="rounded-full bg-blue-100 p-3">
-                    <Calendar className="h-5 w-5 text-blue-600" />
+                  <div className="rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 p-3 shadow-lg shadow-indigo-500/25">
+                    <Calendar className="h-5 w-5 text-white" />
                   </div>
                   <div className="flex-1">
-                    <p className="font-semibold text-foreground">
+                    <p className="font-semibold text-foreground group-hover:text-primary transition-colors">
                       {appointment.doctorName || appointment.doctor?.name || 'Doctor'}
                     </p>
                     <p className="text-sm text-muted-foreground">
@@ -129,7 +129,7 @@ export default function DashboardPage() {
                       })}, {appointment.time}
                     </p>
                   </div>
-                  <div className="flex items-center gap-2 rounded-full bg-amber-100 px-3 py-1">
+                  <div className="flex items-center gap-2 rounded-full bg-amber-500/10 px-3 py-1.5 border border-amber-500/20">
                     <Clock className="h-4 w-4 text-amber-600" />
                     <span className="text-xs font-semibold text-amber-600">
                       {appointment.status}
@@ -154,7 +154,7 @@ export default function DashboardPage() {
 
         {/* Quick Stats */}
         <div className="space-y-4">
-          <Card className="p-6">
+          <Card className="p-6 bg-card/80 backdrop-blur-sm border-border/50 shadow-lg hover:shadow-xl transition-shadow">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Upcoming</p>
@@ -162,12 +162,12 @@ export default function DashboardPage() {
                   {isLoading ? '-' : upcomingCount}
                 </p>
               </div>
-              <div className="rounded-lg p-3 bg-blue-100 text-blue-600">
-                <Clock className="h-6 w-6" />
+              <div className="rounded-xl p-3 bg-gradient-to-br from-blue-500 to-indigo-600 shadow-lg shadow-blue-500/25">
+                <Clock className="h-6 w-6 text-white" />
               </div>
             </div>
           </Card>
-          <Card className="p-6">
+          <Card className="p-6 bg-card/80 backdrop-blur-sm border-border/50 shadow-lg hover:shadow-xl transition-shadow">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Completed</p>
@@ -175,12 +175,12 @@ export default function DashboardPage() {
                   {isLoading ? '-' : completedCount}
                 </p>
               </div>
-              <div className="rounded-lg p-3 bg-green-100 text-green-600">
-                <CheckCircle className="h-6 w-6" />
+              <div className="rounded-xl p-3 bg-gradient-to-br from-emerald-500 to-teal-600 shadow-lg shadow-emerald-500/25">
+                <CheckCircle className="h-6 w-6 text-white" />
               </div>
             </div>
           </Card>
-          <Card className="p-6">
+          <Card className="p-6 bg-card/80 backdrop-blur-sm border-border/50 shadow-lg hover:shadow-xl transition-shadow">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Active Appointments</p>
@@ -188,8 +188,8 @@ export default function DashboardPage() {
                   {isLoading ? '-' : allAppointments.filter(a => a.status !== 'completed' && a.status !== 'cancelled').length}
                 </p>
               </div>
-              <div className="rounded-lg p-3 bg-orange-100 text-orange-600">
-                <Calendar className="h-6 w-6" />
+              <div className="rounded-xl p-3 bg-gradient-to-br from-orange-500 to-amber-600 shadow-lg shadow-orange-500/25">
+                <Calendar className="h-6 w-6 text-white" />
               </div>
             </div>
           </Card>
@@ -197,7 +197,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Past Appointments Section */}
-      <Card className="p-6">
+      <Card className="p-6 bg-card/80 backdrop-blur-sm border-border/50 shadow-lg">
         <h3 className="text-lg font-semibold text-foreground">Past Appointments</h3>
         <div className="mt-6 space-y-4">
           {isLoading ? (
@@ -208,10 +208,10 @@ export default function DashboardPage() {
             pastAppointments.map((appointment) => (
               <div
                 key={appointment.id}
-                className="flex items-start gap-4 rounded-lg border border-border p-4 bg-muted/30"
+                className="flex items-start gap-4 rounded-xl border border-border/50 p-4 bg-muted/20 hover:bg-muted/40 transition-all"
               >
-                <div className="rounded-full bg-green-100 p-3">
-                  <CheckCircle className="h-5 w-5 text-green-600" />
+                <div className="rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 p-3 shadow-lg shadow-emerald-500/25">
+                  <CheckCircle className="h-5 w-5 text-white" />
                 </div>
                 <div className="flex-1">
                   <p className="font-semibold text-foreground">
@@ -228,9 +228,9 @@ export default function DashboardPage() {
                     })}, {appointment.time}
                   </p>
                 </div>
-                <div className="flex items-center gap-2 rounded-full bg-green-100 px-3 py-1">
-                  <CheckCircle className="h-4 w-4 text-green-600" />
-                  <span className="text-xs font-semibold text-green-600">
+                <div className="flex items-center gap-2 rounded-full bg-emerald-500/10 px-3 py-1.5 border border-emerald-500/20">
+                  <CheckCircle className="h-4 w-4 text-emerald-600" />
+                  <span className="text-xs font-semibold text-emerald-600">
                     Completed
                   </span>
                 </div>
@@ -246,7 +246,8 @@ export default function DashboardPage() {
       </Card>
 
       {/* Health Tips */}
-      <Card className="bg-gradient-to-r from-blue-50 to-green-50 p-6 border-blue-200">
+      <Card className="relative overflow-hidden bg-gradient-to-r from-indigo-500/10 via-purple-500/10 to-pink-500/10 p-6 border-indigo-200/50 shadow-lg">
+        <div className="absolute top-0 right-0 w-32 h-32 bg-purple-400/10 rounded-full -translate-y-8 translate-x-8 blur-2xl"></div>
         <h3 className="text-lg font-semibold text-foreground">Health Tips</h3>
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
           {[
@@ -256,7 +257,7 @@ export default function DashboardPage() {
             'Eat healthy: Include fruits and vegetables in every meal',
           ].map((tip, idx) => (
             <div key={idx} className="flex gap-3">
-              <div className="mt-0.5 h-2 w-2 rounded-full bg-primary flex-shrink-0" />
+              <div className="mt-1.5 h-2.5 w-2.5 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex-shrink-0 shadow-lg shadow-indigo-500/50" />
               <p className="text-sm text-foreground">{tip}</p>
             </div>
           ))}

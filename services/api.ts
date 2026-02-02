@@ -102,6 +102,15 @@ class ApiService {
     }
   }
 
+  async changePassword(data: { currentPassword: string; newPassword: string }): Promise<{ message: string }> {
+    try {
+      const response = await this.api.put('/auth/change-password', data);
+      return response.data;
+    } catch (error) {
+      throw this.handleError(error);
+    }
+  }
+
   // Doctor endpoints
   async getDoctors(): Promise<Doctor[]> {
     try {
@@ -220,9 +229,13 @@ class ApiService {
   }
 
   // Medicine Order endpoints
-  async createMedicineOrder(items: { medicineId: number; quantity: number }[]): Promise<Order> {
+  async createMedicineOrder(
+    items: { medicineId: number; quantity: number }[],
+    deliveryAddress: string,
+    deliveryPhone: string
+  ): Promise<Order> {
     try {
-      const response = await this.api.post('/medicines/orders', { items });
+      const response = await this.api.post('/medicines/orders', { items, deliveryAddress, deliveryPhone });
       return response.data;
     } catch (error) {
       throw this.handleError(error);
@@ -435,7 +448,7 @@ class ApiService {
     }
   }
 
-  async updateDoctorProfile(data: { specialization?: string; specializations?: string[]; fees?: number; hospitalId?: number; visitingHours?: string }): Promise<any> {
+  async updateDoctorProfile(data: { specialization?: string; specializations?: string[]; fees?: number; hospitalId?: number }): Promise<any> {
     try {
       const response = await this.api.put('/doctor/profile', data);
       return response.data;

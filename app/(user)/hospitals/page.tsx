@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,15 +12,31 @@ import {
   Clock,
   Navigation,
   AlertCircle,
+  Loader2,
 } from 'lucide-react';
+import { apiService } from '@/services/api';
 
-// Hardcoded hospitals in Sylhet
-const HOSPITALS = [
+interface Hospital {
+  id: string | number;
+  name: string;
+  address: string;
+  phone: string;
+  latitude?: number;
+  longitude?: number;
+  emergencyService?: boolean;
+  type?: string;
+  departments?: string[];
+}
+
+// Fallback hardcoded hospitals with coordinates (used if API fails)
+const FALLBACK_HOSPITALS: Hospital[] = [
   {
     id: '1',
     name: 'Sylhet MAG Osmani Medical College Hospital',
     address: 'Medical College Road, Sylhet',
     phone: '0821-716001',
+    latitude: 24.9048,
+    longitude: 91.8600,
     emergencyService: true,
     type: 'Government',
     departments: ['Emergency', 'Surgery', 'Medicine', 'Pediatrics', 'Gynecology'],
@@ -30,6 +46,8 @@ const HOSPITALS = [
     name: 'Mount Adora Hospital',
     address: 'Subhanighat, Sylhet',
     phone: '0821-2830000',
+    latitude: 24.8989,
+    longitude: 91.8736,
     emergencyService: true,
     type: 'Private',
     departments: ['Cardiology', 'Neurology', 'Orthopedics', 'ICU'],
@@ -39,6 +57,8 @@ const HOSPITALS = [
     name: 'Jalalabad Ragib Rabeya Medical College Hospital',
     address: 'Pathantula, Sylhet',
     phone: '0821-761001',
+    latitude: 24.9128,
+    longitude: 91.8492,
     emergencyService: true,
     type: 'Private',
     departments: ['Surgery', 'Medicine', 'Cardiology', 'Nephrology'],
@@ -48,6 +68,8 @@ const HOSPITALS = [
     name: 'North East Medical College Hospital',
     address: 'South Surma, Sylhet',
     phone: '0821-2890001',
+    latitude: 24.8722,
+    longitude: 91.8844,
     emergencyService: true,
     type: 'Private',
     departments: ['Emergency', 'Surgery', 'Pediatrics', 'Gynecology'],
@@ -57,6 +79,8 @@ const HOSPITALS = [
     name: 'Sylhet Women\'s Medical College Hospital',
     address: 'Mirboxtola, Sylhet',
     phone: '0821-717901',
+    latitude: 24.9015,
+    longitude: 91.8710,
     emergencyService: true,
     type: 'Private',
     departments: ['Gynecology', 'Obstetrics', 'Pediatrics', 'Neonatology'],
@@ -66,6 +90,8 @@ const HOSPITALS = [
     name: 'Ibn Sina Hospital Sylhet',
     address: 'Zindabazar, Sylhet',
     phone: '0821-725678',
+    latitude: 24.8945,
+    longitude: 91.8695,
     emergencyService: true,
     type: 'Private',
     departments: ['Cardiology', 'Gastroenterology', 'Orthopedics', 'ENT'],
@@ -75,6 +101,8 @@ const HOSPITALS = [
     name: 'Oasis Hospital',
     address: 'Amberkhana, Sylhet',
     phone: '0821-2831234',
+    latitude: 24.9005,
+    longitude: 91.8750,
     emergencyService: true,
     type: 'Private',
     departments: ['General Medicine', 'Surgery', 'Diagnostics'],
@@ -84,6 +112,8 @@ const HOSPITALS = [
     name: 'Popular Diagnostic Centre Sylhet',
     address: 'Bondor, Sylhet',
     phone: '0821-720123',
+    latitude: 24.8920,
+    longitude: 91.8680,
     emergencyService: false,
     type: 'Diagnostic',
     departments: ['Pathology', 'Radiology', 'Cardiology', 'Health Checkup'],
@@ -93,6 +123,8 @@ const HOSPITALS = [
     name: 'Medinova Medical Services',
     address: 'Zindabazar, Sylhet',
     phone: '0821-718500',
+    latitude: 24.8950,
+    longitude: 91.8700,
     emergencyService: false,
     type: 'Diagnostic',
     departments: ['Diagnostics', 'Consultation', 'Lab Services'],
@@ -102,6 +134,8 @@ const HOSPITALS = [
     name: 'Shahjalal Upazila Health Complex',
     address: 'Airport Road, Sylhet',
     phone: '0821-723456',
+    latitude: 24.9630,
+    longitude: 91.8830,
     emergencyService: true,
     type: 'Government',
     departments: ['General Medicine', 'Emergency', 'Vaccination'],
@@ -110,21 +144,73 @@ const HOSPITALS = [
 
 export default function HospitalsPage() {
   const [searchTerm, setSearchTerm] = useState('');
+  const [hospitals, setHospitals] = useState<Hospital[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const filteredHospitals = HOSPITALS.filter(
+  useEffect(() => {
+    const fetchHospitals = async () => {
+      try {
+        setIsLoading(true);
+        const data = await apiService.getHospitals();
+        // Merge API data with fallback data for additional fields
+        const mergedHospitals = data.map((apiHospital: any) => {
+          const fallback = FALLBACK_HOSPITALS.find(
+            (h) => h.name.toLowerCase().includes(apiHospital.name.toLowerCase().split(' ')[0]) ||
+                   apiHospital.name.toLowerCase().includes(h.name.toLowerCase().split(' ')[0])
+          );
+          return {
+            ...apiHospital,
+            id: String(apiHospital.id),
+            emergencyService: fallback?.emergencyService ?? true,
+            type: fallback?.type ?? 'Private',
+            departments: fallback?.departments ?? ['General Medicine', 'Emergency'],
+          };
+        });
+        // If API returns hospitals, use them; otherwise use fallback
+        setHospitals(mergedHospitals.length > 0 ? mergedHospitals : FALLBACK_HOSPITALS);
+      } catch (error) {
+        console.error('Failed to fetch hospitals:', error);
+        setHospitals(FALLBACK_HOSPITALS);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchHospitals();
+  }, []);
+
+  const filteredHospitals = hospitals.filter(
     (h) =>
       h.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       h.address.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      h.type.toLowerCase().includes(searchTerm.toLowerCase())
+      (h.type?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false)
   );
 
-  const openGoogleMapsDirections = (hospitalName: string, address: string) => {
-    const destination = encodeURIComponent(`${hospitalName}, ${address}`);
-    const url = `https://www.google.com/maps/dir/?api=1&destination=${destination}`;
-    window.open(url, '_blank');
+  const openGoogleMapsDirections = (hospital: Hospital) => {
+    // Use coordinates if available for accurate directions
+    if (hospital.latitude && hospital.longitude) {
+      const url = `https://www.google.com/maps/dir/?api=1&destination=${hospital.latitude},${hospital.longitude}`;
+      window.open(url, '_blank');
+    } else {
+      // Fallback to name and address
+      const destination = encodeURIComponent(`${hospital.name}, ${hospital.address}`);
+      const url = `https://www.google.com/maps/dir/?api=1&destination=${destination}`;
+      window.open(url, '_blank');
+    }
   };
 
   const emergencyCount = filteredHospitals.filter((h) => h.emergencyService).length;
+
+  if (isLoading) {
+    return (
+      <div className="flex h-96 items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="mx-auto h-12 w-12 animate-spin text-primary" />
+          <p className="mt-4 text-muted-foreground">Loading hospitals...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 p-4 sm:p-6 lg:p-8">
@@ -261,7 +347,7 @@ export default function HospitalsPage() {
                 {/* Action Buttons */}
                 <div className="flex gap-2 pt-4 border-t">
                   <Button
-                    onClick={() => openGoogleMapsDirections(hospital.name, hospital.address)}
+                    onClick={() => openGoogleMapsDirections(hospital)}
                     className="flex-1 bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700"
                   >
                     <Navigation className="h-4 w-4 mr-2" />

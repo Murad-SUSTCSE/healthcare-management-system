@@ -18,14 +18,17 @@ const createOrder = async (req, res) => {
                 medicineId: Joi.number().required(),
                 quantity: Joi.number().min(1).required()
             })
-        ).min(1).required()
+        ).min(1).required(),
+        deliveryAddress: Joi.string().required(),
+        deliveryPhone: Joi.string().required()
     });
 
     const { error } = schema.validate(req.body);
     if (error) return res.status(400).send(error.details[0].message);
 
     try {
-        const order = await medicineService.createOrder(req.user.userId, req.body.items);
+        const { items, deliveryAddress, deliveryPhone } = req.body;
+        const order = await medicineService.createOrder(req.user.userId, items, deliveryAddress, deliveryPhone);
         res.status(201).json(order);
     } catch (err) {
         res.status(400).json({ message: err.message });

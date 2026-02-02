@@ -61,7 +61,7 @@ const createOrder = async (userId, items) => {
     });
 };
 
-const createOrderSimple = async (userId, items) => {
+const createOrderSimple = async (userId, items, deliveryAddress, deliveryPhone) => {
     return await prisma.$transaction(async (tx) => {
         let total = 0;
         const orderItemsData = [];
@@ -90,6 +90,8 @@ const createOrderSimple = async (userId, items) => {
                 userId,
                 total,
                 status: 'PENDING',
+                deliveryAddress,
+                deliveryPhone,
                 orderItems: {
                     create: orderItemsData
                 }

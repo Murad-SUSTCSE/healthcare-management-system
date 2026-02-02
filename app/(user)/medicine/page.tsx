@@ -5,7 +5,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { MedicineCard } from '@/components/MedicineCard';
-import { Search, ShoppingCart, Pill, Loader2, Package, Clock, CheckCircle } from 'lucide-react';
+import { Search, ShoppingCart, Pill, Loader2, Package, Clock, CheckCircle, MapPin, Phone, X } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import type { Medicine, CartItem } from '@/types';
@@ -26,6 +26,13 @@ export default function MedicinePage() {
   const [activeTab, setActiveTab] = useState('shop');
   const { toast } = useToast();
   const { user } = useAuth();
+
+  // Delivery info modal state
+  const [showDeliveryModal, setShowDeliveryModal] = useState(false);
+  const [deliveryInfo, setDeliveryInfo] = useState({
+    address: '',
+    phone: user?.phone || '',
+  });
 
   // Fetch medicines from API
   useEffect(() => {
@@ -123,6 +130,33 @@ export default function MedicinePage() {
       return;
     }
 
+    // Show delivery info modal
+    setDeliveryInfo({
+      address: '',
+      phone: user?.phone || '',
+    });
+    setShowDeliveryModal(true);
+  };
+
+  const handleConfirmOrder = async () => {
+    if (!deliveryInfo.address.trim()) {
+      toast({
+        title: "Address Required",
+        description: "Please enter your delivery address",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!deliveryInfo.phone.trim()) {
+      toast({
+        title: "Phone Required",
+        description: "Please enter your phone number",
+        variant: "destructive",
+      });
+      return;
+    }
+
     try {
       setIsOrdering(true);
       const items = cartItems.map((item) => ({
@@ -130,7 +164,7 @@ export default function MedicinePage() {
         quantity: item.quantity,
       }));
       
-      await apiService.createMedicineOrder(items);
+      await apiService.createMedicineOrder(items, deliveryInfo.address, deliveryInfo.phone);
       
       toast({
         title: "Order Placed Successfully!",
@@ -139,6 +173,7 @@ export default function MedicinePage() {
       
       // Clear cart and refresh orders
       setCartItems([]);
+      setShowDeliveryModal(false);
       const orders = await apiService.getMyMedicineOrders();
       setMyOrders(orders);
       setActiveTab('orders');
@@ -482,6 +517,96 @@ export default function MedicinePage() {
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* Delivery Info Modal */}
+      {showDeliveryModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <Card className="w-full max-w-md p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold">Delivery Information</h3>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => setShowDeliveryModal(false)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+
+            <p className="text-sm text-muted-foreground mb-4">
+              Please provide your delivery details to complete your order.
+            </p>
+
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-medium flex items-center gap-2 mb-1">
+                  <MapPin className="h-4 w-4 text-primary" />
+                  Delivery Address
+                </label>
+                <Input
+                  value={deliveryInfo.address}
+                  onChange={(e) => setDeliveryInfo({ ...deliveryInfo, address: e.target.value })}
+                  placeholder="Enter your full delivery address"
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium flex items-center gap-2 mb-1">
+                  <Phone className="h-4 w-4 text-primary" />
+                  Phone Number
+                </label>
+                <Input
+                  value={deliveryInfo.phone}
+                  onChange={(e) => setDeliveryInfo({ ...deliveryInfo, phone: e.target.value })}
+                  placeholder="Enter your phone number"
+                  className="mt-1"
+                />
+              </div>
+
+              {/* Order Summary */}
+              <div className="bg-muted/50 p-3 rounded-lg">
+                <p className="font-medium mb-2">Order Summary</p>
+                <div className="text-sm space-y-1">
+                  <div className="flex justify-between">
+                    <span>Items ({totalItems})</span>
+                    <span>৳{totalPrice.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Delivery</span>
+                    <span className="text-green-600">Free</span>
+                  </div>
+                  <div className="flex justify-between font-bold pt-2 border-t">
+                    <span>Total</span>
+                    <span className="text-primary">৳{totalPrice.toFixed(2)}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex gap-2 pt-2">
+                <Button
+                  className="flex-1 bg-gradient-to-r from-blue-600 to-green-600"
+                  onClick={handleConfirmOrder}
+                  disabled={isOrdering || !deliveryInfo.address || !deliveryInfo.phone}
+                >
+                  {isOrdering ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" /> Placing Order...
+                    </>
+                  ) : (
+                    'Confirm Order'
+                  )}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setShowDeliveryModal(false)}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }

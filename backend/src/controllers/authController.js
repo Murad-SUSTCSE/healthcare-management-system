@@ -216,6 +216,49 @@ const deleteUser = async (req, res) => {
     }
 };
 
+// Change password
+const changePassword = async (req, res) => {
+    const schema = Joi.object({
+        currentPassword: Joi.string().required(),
+        newPassword: Joi.string().min(6).required()
+    });
+
+    const { error } = schema.validate(req.body);
+    if (error) return res.status(400).json({ message: error.details[0].message });
+
+    try {
+        const userId = req.user.userId || req.user.id;
+        const { currentPassword, newPassword } = req.body;
+
+        const user = await prisma.user.findUnique({
+            where: { id: userId }
+        });
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        // Verify current password
+        const bcrypt = require('bcrypt');
+        const isValidPassword = await bcrypt.compare(currentPassword, user.password);
+        if (!isValidPassword) {
+            return res.status(400).json({ message: 'Current password is incorrect' });
+        }
+
+        // Hash new password and update
+        const hashedPassword = await bcrypt.hash(newPassword, 10);
+        await prisma.user.update({
+            where: { id: userId },
+            data: { password: hashedPassword }
+        });
+
+        res.json({ message: 'Password changed successfully' });
+    } catch (err) {
+        console.error('Change password error:', err);
+        res.status(500).json({ message: 'Failed to change password' });
+    }
+};
+
 module.exports = {
     register,
     login,
@@ -223,5 +266,6 @@ module.exports = {
     updateProfile,
     getAllUsers,
     getAdminStats,
-    deleteUser
+    deleteUser,
+    changePassword
 };

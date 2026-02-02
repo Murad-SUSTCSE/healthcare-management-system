@@ -54,20 +54,20 @@ export function Header() {
   }
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60">
+    <header className="sticky top-0 z-50 w-full border-b border-border/50 bg-card/80 backdrop-blur-xl supports-[backdrop-filter]:bg-card/60 shadow-sm">
       <div className="container flex h-16 items-center justify-between px-4">
         {/* Logo */}
-        <Link href={isAdmin ? '/admin' : isDoctor ? '/doctor-dashboard' : '/dashboard'} className="flex items-center gap-2">
-          <div className={`rounded-lg p-1.5 ${isAdmin ? 'bg-gradient-to-br from-red-500 to-orange-500' : isDoctor ? 'bg-gradient-to-br from-teal-500 to-blue-500' : 'bg-gradient-to-br from-blue-500 to-green-500'}`}>
+        <Link href={isAdmin ? '/admin' : isDoctor ? '/doctor-dashboard' : '/dashboard'} className="flex items-center gap-2.5 group">
+          <div className={`rounded-xl p-2 shadow-lg transition-transform group-hover:scale-105 ${isAdmin ? 'bg-gradient-to-br from-rose-500 to-orange-500' : isDoctor ? 'bg-gradient-to-br from-teal-500 to-cyan-500' : 'bg-gradient-to-br from-blue-500 to-indigo-500'}`}>
             {isAdmin ? <Shield className="h-5 w-5 text-white" /> : isDoctor ? <Stethoscope className="h-5 w-5 text-white" /> : <Heart className="h-5 w-5 text-white" />}
           </div>
-          <span className="font-bold text-foreground hidden sm:inline">
+          <span className="font-bold text-foreground hidden sm:inline bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
             {isAdmin ? 'Admin Panel' : isDoctor ? 'Doctor Portal' : 'Sylhet Health Hub'}
           </span>
         </Link>
 
         {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center gap-1">
+        <nav className="hidden md:flex items-center gap-1 bg-muted/50 rounded-full p-1">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href || 
@@ -77,7 +77,7 @@ export function Header() {
                 <Button
                   variant={isActive ? 'default' : 'ghost'}
                   size="sm"
-                  className={`gap-2 ${isActive ? '' : 'text-muted-foreground hover:text-foreground'}`}
+                  className={`gap-2 rounded-full transition-all ${isActive ? 'shadow-md' : 'text-muted-foreground hover:text-foreground hover:bg-background/80'}`}
                 >
                   <Icon className="h-4 w-4" />
                   {item.label}
@@ -89,14 +89,17 @@ export function Header() {
 
         {/* Right side - User info and Logout */}
         <div className="flex items-center gap-3">
-          <span className="text-sm text-muted-foreground hidden sm:inline">
-            {user?.name}
-          </span>
+          <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted/50">
+            <div className={`h-2 w-2 rounded-full animate-pulse ${isAdmin ? 'bg-rose-500' : isDoctor ? 'bg-teal-500' : 'bg-green-500'}`}></div>
+            <span className="text-sm font-medium text-foreground">
+              {user?.name}
+            </span>
+          </div>
           <Button
             onClick={logout}
             variant="outline"
             size="sm"
-            className="gap-2 border-destructive/50 text-destructive hover:bg-destructive/10"
+            className="gap-2 rounded-full border-destructive/30 text-destructive hover:bg-destructive/10 hover:border-destructive/50"
           >
             <LogOut className="h-4 w-4" />
             <span className="hidden sm:inline">Logout</span>

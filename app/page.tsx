@@ -187,7 +187,7 @@ export default function Home() {
       <footer className="border-t border-border bg-card">
         <div className="mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8">
           <div className="text-center text-muted-foreground">
-            <p>© 2024 Sylhet Health Hub. All rights reserved.</p>
+            <p>© 2026 Sylhet Health Hub. All rights reserved.</p>
           </div>
         </div>
       </footer>

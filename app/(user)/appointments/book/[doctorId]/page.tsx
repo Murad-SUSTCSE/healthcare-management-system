@@ -12,12 +12,13 @@ import { apiService } from '@/services/api';
 import type { Doctor } from '@/types';
 
 interface AvailabilitySlot {
-  id: number;
+  id: number | string;
   doctorId: number;
   date: string;
   startTime: string;
   endTime: string;
   isBooked: boolean;
+  isWeekly?: boolean;
 }
 
 export default function BookAppointmentPage() {
@@ -27,6 +28,7 @@ export default function BookAppointmentPage() {
 
   const [doctor, setDoctor] = useState<Doctor | null>(null);
   const [availableSlots, setAvailableSlots] = useState<AvailabilitySlot[]>([]);
+  const [availableDays, setAvailableDays] = useState<Set<number>>(new Set());
   const [isLoadingDoctor, setIsLoadingDoctor] = useState(true);
   const [isLoadingSlots, setIsLoadingSlots] = useState(false);
   const [selectedDate, setSelectedDate] = useState('');
@@ -42,6 +44,11 @@ export default function BookAppointmentPage() {
         setIsLoadingDoctor(true);
         const data = await apiService.getDoctor(doctorId);
         setDoctor(data);
+        // Extract which days of the week have availability
+        if (data.availableSlots && Array.isArray(data.availableSlots)) {
+          const days = new Set(data.availableSlots.map((slot: { dayOfWeek: number }) => slot.dayOfWeek));
+          setAvailableDays(days);
+        }
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load doctor information');
       } finally {
@@ -197,6 +204,7 @@ export default function BookAppointmentPage() {
               <label className="mb-3 flex items-center gap-2 font-semibold text-foreground">
                 <Calendar className="h-5 w-5 text-primary" />
                 Select Date
+                <span className="text-xs font-normal text-muted-foreground ml-2">(Days with green dot have available slots)</span>
               </label>
               <div className="grid grid-cols-4 gap-2 sm:grid-cols-7">
                 {nextDays.map((date) => {
@@ -205,18 +213,25 @@ export default function BookAppointmentPage() {
                     weekday: 'short',
                   });
                   const dayNum = date.getDate();
+                  const dayOfWeek = date.getDay();
+                  const hasAvailability = availableDays.has(dayOfWeek);
 
                   return (
                     <button
                       key={dateStr}
                       type="button"
                       onClick={() => setSelectedDate(dateStr)}
-                      className={`rounded-lg py-3 text-center transition-all ${
+                      className={`relative rounded-lg py-3 text-center transition-all ${
                         selectedDate === dateStr
                           ? 'bg-primary text-white ring-2 ring-primary ring-offset-2'
-                          : 'border border-border bg-background hover:border-primary'
+                          : hasAvailability
+                            ? 'border-2 border-green-400 bg-green-50 hover:border-green-500 hover:bg-green-100'
+                            : 'border border-border bg-background/50 text-muted-foreground'
                       }`}
                     >
+                      {hasAvailability && selectedDate !== dateStr && (
+                        <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-green-500"></span>
+                      )}
                       <p className="text-xs font-semibold">{dayName}</p>
                       <p className="text-sm font-bold">{dayNum}</p>
                     </button>
