@@ -130,7 +130,9 @@ const getAllUsers = async (req, res) => {
 const getAdminStats = async (req, res) => {
     try {
         const [totalUsers, totalDoctors, totalAppointments] = await Promise.all([
-            prisma.user.count(),
+            prisma.user.count({
+                where: { role: 'USER' } // Only count regular users (patients)
+            }),
             prisma.doctor.count(),
             prisma.appointment.count()
         ]);

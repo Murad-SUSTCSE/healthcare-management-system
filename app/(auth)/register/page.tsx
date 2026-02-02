@@ -57,8 +57,9 @@ export default function RegisterPage() {
     setIsLoading(true);
 
     try {
-      const registeredUser = await register(name, email, password);
-      router.replace(getRedirectPath(registeredUser.role));
+      await register(name, email, password);
+      // Redirect to login page with success message
+      router.replace('/login?registered=true');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Registration failed');
     } finally {

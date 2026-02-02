@@ -3,13 +3,13 @@
 import React from "react"
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
-import { Heart } from 'lucide-react';
+import { Heart, CheckCircle } from 'lucide-react';
 
 // Helper function to get redirect path based on user role
 const getRedirectPath = (role?: string): string => {
@@ -30,6 +30,10 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const { login, isAuthenticated, isLoading: authLoading, user } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  
+  // Check if user just registered
+  const justRegistered = searchParams.get('registered') === 'true';
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -84,6 +88,14 @@ export default function LoginPage() {
             <h1 className="text-3xl font-bold text-foreground">Welcome Back</h1>
             <p className="mt-2 text-muted-foreground">Sylhet Health Hub</p>
           </div>
+
+          {/* Success Message from Registration */}
+          {justRegistered && (
+            <div className="flex items-center gap-2 rounded-lg bg-green-50 p-3 text-sm text-green-700">
+              <CheckCircle className="h-5 w-5 flex-shrink-0" />
+              <span>Account created successfully! Please sign in to continue.</span>
+            </div>
+          )}
 
           {/* Error Message */}
           {error && (

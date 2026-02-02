@@ -51,13 +51,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const register = async (name: string, email: string, password: string): Promise<User> => {
-    setIsLoading(true);
     try {
       const response = await apiService.register({ name, email, password });
-      setUser(response.user);
+      // Don't auto-login - just return the user info
       return response.user;
-    } finally {
-      setIsLoading(false);
+    } catch (error) {
+      throw error;
     }
   };
 

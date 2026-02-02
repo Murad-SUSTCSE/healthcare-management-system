@@ -77,8 +77,7 @@ class ApiService {
   async register(credentials: RegisterCredentials): Promise<AuthResponse> {
     try {
       const response = await this.api.post('/auth/register', credentials);
-      const { token } = response.data;
-      this.setToken(token);
+      // Don't auto-login after registration - user should sign in manually
       return response.data;
     } catch (error) {
       throw this.handleError(error);

@@ -1,21 +1,25 @@
 'use client';
 
-import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Heart, MapPin, Pill, Ambulance, Users, ArrowRight } from 'lucide-react';
 
 export default function Home() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
   const router = useRouter();
 
-  // Handle redirect in useEffect to avoid setState during render
-  useEffect(() => {
-    if (!isLoading && isAuthenticated) {
-      router.push('/dashboard');
+  // Helper function to get redirect path based on user role
+  const getRedirectPath = (role?: string): string => {
+    switch (role) {
+      case 'ADMIN':
+        return '/admin';
+      case 'DOCTOR':
+        return '/doctor-dashboard';
+      default:
+        return '/dashboard';
     }
-  }, [isAuthenticated, isLoading, router]);
+  };
 
   if (isLoading) {
     return (
@@ -26,10 +30,6 @@ export default function Home() {
         </div>
       </div>
     );
-  }
-
-  if (isAuthenticated) {
-    return null;
   }
 
   return (
@@ -44,19 +44,31 @@ export default function Home() {
             <span className="text-2xl font-bold text-foreground">Sylhet Health Hub</span>
           </div>
           <div className="flex gap-3">
-            <Button
-              variant="outline"
-              onClick={() => router.push('/login')}
-              className="rounded-xl"
-            >
-              Sign In
-            </Button>
-            <Button
-              onClick={() => router.push('/register')}
-              className="rounded-xl"
-            >
-              Get Started
-            </Button>
+            {isAuthenticated ? (
+              <Button
+                onClick={() => router.push(getRedirectPath(user?.role))}
+                className="rounded-xl bg-gradient-to-r from-blue-500 to-green-500 text-white"
+              >
+                Go to Dashboard
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            ) : (
+              <>
+                <Button
+                  variant="outline"
+                  onClick={() => router.push('/login')}
+                  className="rounded-xl"
+                >
+                  Sign In
+                </Button>
+                <Button
+                  onClick={() => router.push('/register')}
+                  className="rounded-xl"
+                >
+                  Get Started
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </nav>

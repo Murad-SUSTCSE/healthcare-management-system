@@ -73,6 +73,35 @@ const getMyAppointments = async (userId) => {
 };
 
 const updateAppointmentStatus = async (id, status) => {
+    const appointment = await prisma.appointment.findUnique({
+        where: { id: parseInt(id) }
+    });
+
+    if (!appointment) {
+        throw new Error('Appointment not found');
+    }
+
+    // If cancelling, release the time slot
+    if (status === 'CANCELLED') {
+        // Get the appointment time to find matching availability slot
+        const appointmentDate = new Date(appointment.date);
+        const dateOnly = new Date(appointmentDate);
+        dateOnly.setHours(0, 0, 0, 0);
+        
+        const startTime = `${appointmentDate.getHours().toString().padStart(2, '0')}:${appointmentDate.getMinutes().toString().padStart(2, '0')}`;
+        
+        // Try to find and release the date-specific slot
+        await prisma.doctorAvailability.updateMany({
+            where: {
+                doctorId: appointment.doctorId,
+                date: dateOnly,
+                startTime: startTime,
+                isBooked: true
+            },
+            data: { isBooked: false }
+        });
+    }
+
     return await prisma.appointment.update({
         where: { id: parseInt(id) },
         data: { status }

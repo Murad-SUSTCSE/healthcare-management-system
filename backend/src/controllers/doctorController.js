@@ -325,6 +325,26 @@ const updateAppointmentStatus = async (req, res) => {
       return res.status(404).json({ message: 'Appointment not found' });
     }
 
+    // If cancelling, release the time slot
+    if (status === 'CANCELLED') {
+      const appointmentDate = new Date(appointment.date);
+      const dateOnly = new Date(appointmentDate);
+      dateOnly.setHours(0, 0, 0, 0);
+      
+      const startTime = `${appointmentDate.getHours().toString().padStart(2, '0')}:${appointmentDate.getMinutes().toString().padStart(2, '0')}`;
+      
+      // Try to find and release the date-specific slot
+      await prisma.doctorAvailability.updateMany({
+        where: {
+          doctorId: doctor.id,
+          date: dateOnly,
+          startTime: startTime,
+          isBooked: true
+        },
+        data: { isBooked: false }
+      });
+    }
+
     const updatedAppointment = await prisma.appointment.update({
       where: { id: parseInt(appointmentId) },
       data: { status },
@@ -348,87 +368,84 @@ const getPublicDoctorAvailability = async (req, res) => {
     const { doctorId } = req.params;
     const { date } = req.query;
 
-    // First, get date-specific availability
-    const whereClause = {
-      doctorId: parseInt(doctorId),
-      isBooked: false,
-    };
-
-    if (date) {
-      const dateObj = new Date(date);
-      dateObj.setHours(0, 0, 0, 0);
-      whereClause.date = dateObj;
-    } else {
-      // Get slots from today onwards
-      whereClause.date = {
-        gte: new Date(new Date().setHours(0, 0, 0, 0)),
-      };
+    if (!date) {
+      // Without a date, just return empty for now (require date selection)
+      return res.json([]);
     }
 
-    const dateSpecificSlots = await prisma.doctorAvailability.findMany({
-      where: whereClause,
-      orderBy: [{ date: 'asc' }, { startTime: 'asc' }],
+    const dateObj = new Date(date);
+    dateObj.setHours(0, 0, 0, 0);
+    const dayOfWeek = dateObj.getDay(); // 0 = Sunday, 1 = Monday, etc.
+
+    // Get all appointments for this doctor on this date (excluding cancelled)
+    const bookedAppointments = await prisma.appointment.findMany({
+      where: {
+        doctorId: parseInt(doctorId),
+        date: {
+          gte: new Date(new Date(date).setHours(0, 0, 0, 0)),
+          lt: new Date(new Date(date).setHours(23, 59, 59, 999)),
+        },
+        status: { not: 'CANCELLED' },
+      },
+      select: { date: true },
     });
 
-    // If date is provided, also check weekly availability for that day of week
-    if (date) {
-      const dateObj = new Date(date);
-      const dayOfWeek = dateObj.getDay(); // 0 = Sunday, 1 = Monday, etc.
+    // Get booked times as strings for comparison
+    const bookedTimes = new Set(bookedAppointments.map(apt => {
+      const d = new Date(apt.date);
+      return `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
+    }));
 
-      const weeklySlots = await prisma.doctorWeeklyAvailability.findMany({
-        where: {
-          doctorId: parseInt(doctorId),
-          dayOfWeek: dayOfWeek,
-        },
-        orderBy: { startTime: 'asc' },
-      });
+    // Get date-specific availability slots
+    const dateSpecificSlots = await prisma.doctorAvailability.findMany({
+      where: {
+        doctorId: parseInt(doctorId),
+        date: dateObj,
+      },
+      orderBy: { startTime: 'asc' },
+    });
 
-      // Check which weekly slots are already booked for this specific date
-      const bookedAppointments = await prisma.appointment.findMany({
-        where: {
-          doctorId: parseInt(doctorId),
-          date: {
-            gte: new Date(new Date(date).setHours(0, 0, 0, 0)),
-            lt: new Date(new Date(date).setHours(23, 59, 59, 999)),
-          },
-          status: { not: 'CANCELLED' },
-        },
-        select: { date: true },
-      });
+    // Filter out slots that are already booked (check against appointments, not just isBooked flag)
+    const availableDateSlots = dateSpecificSlots
+      .filter(slot => !bookedTimes.has(slot.startTime))
+      .map(slot => ({
+        ...slot,
+        isBooked: false, // Verified as available
+      }));
 
-      // Get booked times as strings for comparison
-      const bookedTimes = bookedAppointments.map(apt => {
-        const d = new Date(apt.date);
-        return `${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`;
-      });
+    // Get weekly availability for this day of week
+    const weeklySlots = await prisma.doctorWeeklyAvailability.findMany({
+      where: {
+        doctorId: parseInt(doctorId),
+        dayOfWeek: dayOfWeek,
+      },
+      orderBy: { startTime: 'asc' },
+    });
 
-      // Convert weekly slots to date-specific format, excluding booked ones
-      const weeklyAsSlotsFormat = weeklySlots
-        .filter(slot => !bookedTimes.includes(slot.startTime))
-        .map(slot => ({
-          id: `weekly-${slot.id}`,
-          doctorId: slot.doctorId,
-          date: date,
-          startTime: slot.startTime,
-          endTime: slot.endTime,
-          isBooked: false,
-          isWeekly: true, // Flag to indicate this is from weekly availability
-        }));
+    // Convert weekly slots to date-specific format, excluding booked ones
+    const weeklyAsSlotsFormat = weeklySlots
+      .filter(slot => !bookedTimes.has(slot.startTime))
+      .map(slot => ({
+        id: `weekly-${slot.id}`,
+        doctorId: slot.doctorId,
+        date: date,
+        startTime: slot.startTime,
+        endTime: slot.endTime,
+        isBooked: false,
+        isWeekly: true, // Flag to indicate this is from weekly availability
+      }));
 
-      // Combine date-specific and weekly slots, avoiding duplicates by startTime
-      const existingStartTimes = new Set(dateSpecificSlots.map(s => s.startTime));
-      const combinedSlots = [
-        ...dateSpecificSlots,
-        ...weeklyAsSlotsFormat.filter(s => !existingStartTimes.has(s.startTime)),
-      ];
+    // Combine date-specific and weekly slots, avoiding duplicates by startTime
+    const existingStartTimes = new Set(availableDateSlots.map(s => s.startTime));
+    const combinedSlots = [
+      ...availableDateSlots,
+      ...weeklyAsSlotsFormat.filter(s => !existingStartTimes.has(s.startTime)),
+    ];
 
-      // Sort by startTime
-      combinedSlots.sort((a, b) => a.startTime.localeCompare(b.startTime));
+    // Sort by startTime
+    combinedSlots.sort((a, b) => a.startTime.localeCompare(b.startTime));
 
-      return res.json(combinedSlots);
-    }
-
-    res.json(dateSpecificSlots);
+    res.json(combinedSlots);
   } catch (error) {
     console.error('Get public doctor availability error:', error);
     res.status(500).json({ message: 'Failed to get availability' });
